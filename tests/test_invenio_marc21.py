@@ -48,10 +48,10 @@ def mock_record_validate(self):
 
 
 @mock.patch('invenio_records.api.Record.validate', mock_record_validate)
-def load_records(es_app, filename, schema):
+def load_records(app, filename, schema):
     """Try to index records."""
     indexer = RecordIndexer()
-    with es_app.test_request_context():
+    with app.test_request_context():
         data_filename = pkg_resources.resource_filename(
             'invenio_records', filename)
         records_data = load(data_filename)
@@ -74,17 +74,17 @@ def load_records(es_app, filename, schema):
                                       id=record['_id'])
 
 
-def test_authority_data(es_app, request):
+def test_authority_data(app, es, request):
     """Test indexation using authority data."""
     schema = ('http://localhost:5000/'
               'marc21/authority/ad-v1.0.0.json')
-    load_records(es_app=es_app, filename='data/marc21/authority.xml',
+    load_records(app=app, filename='data/marc21/authority.xml',
                  schema=schema)
 
 
-def test_bibliographic_data(es_app, request):
+def test_bibliographic_data(app, es, request):
     """Test indexation using bibliographic data."""
     schema = ('http://localhost:5000/'
               'marc21/bibliographic/bd-v1.0.0.json')
-    load_records(es_app=es_app, filename='data/marc21/bibliographic.xml',
+    load_records(app=app, filename='data/marc21/bibliographic.xml',
                  schema=schema)

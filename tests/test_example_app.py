@@ -53,16 +53,6 @@ def test_example_app():
     exit_status = subprocess.call(cmd, shell=True)
     assert exit_status == 0
 
-    # Download javascript and css libraries
-    for cmd in ['FLASK_APP=app.py flask npm',
-                'cd static && npm install && cd ..',
-                'npm install -g node-sass@3.8.0 clean-css@3.4.12'
-                ' requirejs uglify-js',
-                'FLASK_APP=app.py flask collect -v',
-                'FLASK_APP=app.py flask assets build']:
-        exit_status = subprocess.call(cmd, shell=True)
-        assert exit_status == 0
-
     # Starting example web app
     cmd = 'FLASK_APP=app.py flask run'
     webapp = subprocess.Popen(cmd, stdout=subprocess.PIPE,

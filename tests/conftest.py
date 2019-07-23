@@ -12,7 +12,6 @@
 from __future__ import absolute_import, print_function
 
 import os
-from time import sleep
 
 import pytest
 from flask import Flask
@@ -21,7 +20,7 @@ from invenio_db import InvenioDB, db
 from invenio_indexer import InvenioIndexer
 from invenio_jsonschemas import InvenioJSONSchemas
 from invenio_records import InvenioRecords
-from invenio_search import InvenioSearch
+from invenio_search import InvenioSearch, current_search
 
 from invenio_marc21 import InvenioMARC21
 
@@ -31,18 +30,11 @@ def app():
     """Flask application fixture."""
     app = Flask('testapp')
     app.config.update(
-        TESTING=True
-    )
-    return app
-
-
-@pytest.fixture()
-def es_app(request):
-    """Flask application with records fixture."""
-    app = Flask(__name__)
-    app.config.update(
         JSONSCHEMAS_ENDPOINT='/',
         JSONSCHEMAS_HOST='http://localhost:5000',
+        INDEXER_DEFAULT_INDEX='',
+        SEARCH_INDEX_PREFIX='test-',
+        TESTING=True,
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db'),
     )
@@ -54,20 +46,21 @@ def es_app(request):
     InvenioDB(app)
     InvenioRecords(app)
     InvenioMARC21(app)
-    search = InvenioSearch(app)
+    InvenioSearch(app)
     InvenioIndexer(app)
     InvenioJSONSchemas(app)
+    return app
 
+
+@pytest.fixture()
+def es(app):
+    """Flask application with records fixture."""
     with app.app_context():
         db.create_all()
-        list(search.create())
-        sleep(10)
+        list(current_search.create(ignore=None))
 
-    def teardown():
-        with app.app_context():
-            db.drop_all()
-            list(search.delete())
+    yield current_search
 
-    request.addfinalizer(teardown)
-
-    return app
+    with app.app_context():
+        db.drop_all()
+        list(current_search.delete())
